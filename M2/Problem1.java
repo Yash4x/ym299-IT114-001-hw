@@ -15,10 +15,19 @@ public class Problem1 {
     }
     static void processArray(int[] arr){
         System.out.println("Processing Array:" + Arrays.toString(arr));
-        System.out.println("Odds output:");
+        System.out.print("Odds output:");
         //hint: use the arr variable; don't diretly use the a1-a4 variables
         //TODO add/edit code here
         
+        System.out.print(" [");
+        for(int num : arr){
+            if (num%2!=0){
+                System.out.print(num + ",");
+            }
+        }
+
+        System.out.print("]");
+        System.out.println();
         //end add/edit section
         System.out.println();
         System.out.println("End process");

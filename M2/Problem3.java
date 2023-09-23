@@ -22,7 +22,7 @@ public class Problem3 {
         //TODO convert each value to positive
         //set the result to the proper index of the output array
         //hint: don't forget to handle the data types properly, the result datatype should be the same as the original datatype
-        
+        for ()
         //end edit section
 
         StringBuilder sb = new StringBuilder();
