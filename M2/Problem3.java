@@ -22,7 +22,22 @@ public class Problem3 {
         //TODO convert each value to positive
         //set the result to the proper index of the output array
         //hint: don't forget to handle the data types properly, the result datatype should be the same as the original datatype
-        for ()
+        int index = 0;
+        for (T item : arr) {
+            if (item instanceof Integer) {
+                int myInt = (Integer) item;
+                output[index++] = Math.abs(myInt);
+            } 
+            else if (item instanceof Double) {
+                double myDouble = (Double) item;
+                output[index++] = Math.abs(myDouble);
+            } 
+            else if (item instanceof String) {
+                String strValue = (String) item;
+                double myDouble = Double.parseDouble(strValue);
+                output[index++] = Math.abs(myDouble);
+            }
+        }
         //end edit section
 
         StringBuilder sb = new StringBuilder();
