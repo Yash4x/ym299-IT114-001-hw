@@ -11,10 +11,12 @@ public class NumberGuesser4 {
     private int level = 1;
     private int strikes = 0;
     private int maxStrikes = 5;
+    private int maxStrikesPerLevel = 5; // Added for difficulty selector
     private int number = -1;
     private boolean pickNewRandom = true;
     private Random random = new Random();
     private String fileName = "ng4.txt";
+    private String[] proximityIndicators = { "cold", "warm", "hot" }; // Added for proximity indicator
     private String[] fileHeaders = { "Level", "Strikes", "Number", "MaxLevel" };// used for demo readability
 
     private void saveState() {
@@ -121,18 +123,49 @@ public class NumberGuesser4 {
         }
     }
 
+    // Yash Mandal, ym299, 10/1/2023
+    private void setDifficulty(int difficultyLevel) {
+        if (difficultyLevel >= 1) {
+            maxStrikesPerLevel = difficultyLevel; // Adjust per your preference
+        } 
+        
+        else {
+            maxStrikesPerLevel = 5; // Default to maximum difficulty
+        }
+    }
+
+    // Method to calculate proximity indicator - Yash Mandal, ym299, 10/1/2023
+    private String calculateProximityIndicator(int guess) {
+        int difference = Math.abs(guess - number);
+        if (difference >= 5 && difference <= 15) {
+            return proximityIndicators[0]; // Cold
+        } 
+
+        else if (difference >= 1 && difference <= 5) {
+            return proximityIndicators[1]; // Warm
+        } 
+
+        else {
+            return proximityIndicators[2]; // Hot
+        }
+    }
+
     private void processGuess(int guess) {
         if (guess < 0) {
             return;
         }
         System.out.println("You guessed " + guess);
+
+        String proximityIndicator = calculateProximityIndicator(guess); // Proximityindicator called to procces the guessed number
+        System.out.println("You're getting " + proximityIndicator);
+
         if (guess == number) {
             win();
             pickNewRandom = true;
         } else {
             System.out.println("That's wrong");
             strikes++;
-            if (strikes >= maxStrikes) {
+            if (strikes >= maxStrikesPerLevel) {
                 lose();
                 pickNewRandom = true;
             }
@@ -156,6 +189,12 @@ public class NumberGuesser4 {
             System.out.println("Welcome to NumberGuesser4.0");
             System.out.println("To exit, type the word 'quit'.");
             loadState();
+
+            // Added difficulty selection - Yash Mandal, ym299, 10/1/2023
+            System.out.println("Select the difficulty level (1-5): ");
+            int difficultyLevel = strToNum(input.nextLine());
+            setDifficulty(difficultyLevel);
+            
             do {
                 if (pickNewRandom) {
                     generateNewNumber(level);
