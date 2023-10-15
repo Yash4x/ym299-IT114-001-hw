@@ -1,5 +1,6 @@
 package M4.Part3;
 
+import java.util.Random;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -8,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 
 public class Server {
+    private Random rand = new Random();
     int port = 3001;
     // connected clients
     private List<ServerThread> clients = new ArrayList<ServerThread>();
@@ -69,7 +71,28 @@ public class Server {
 
     private boolean processCommand(String message, long clientId){
         System.out.println("Checking command: " + message);
-        if(message.equalsIgnoreCase("disconnect")){
+        if(message.equalsIgnoreCase("flip") || message.equalsIgnoreCase("toss")){
+            boolean isHeads = rand.nextBoolean();
+            String result = String.format("User[%d] flipped a coin and got %s", clientId, isHeads ? "heads" : "tails");
+            broadcast(result, clientId);
+            return true;
+          }
+        else if(message.matches("roll \\d+d\\d+")) {
+            String[] parts = message.split(" ");
+            int numDice = Integer.parseInt(parts[1].substring(0, parts[1].indexOf("d")));
+            int numSides = Integer.parseInt(parts[1].substring(parts[1].indexOf("d") + 1));
+            
+            int total = 0;
+            for(int i = 0; i < numDice; i++) {
+                total += rand.nextInt(numSides) + 1;
+            }
+            
+            String result = String.format("User[%d] rolled %s and got %d", clientId, parts[1], total);
+                
+            broadcast(result, clientId);
+            return true;
+        }
+        else if (message.equalsIgnoreCase("disconnect")){
             Iterator<ServerThread> it = clients.iterator();
             while (it.hasNext()) {
                 ServerThread client = it.next();
