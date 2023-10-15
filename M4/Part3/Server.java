@@ -9,7 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 
 public class Server {
-    private Random rand = new Random();
+    private Random rand = new Random(); //Yash Mandal - ym299 - 10/15/2023 - Added a Random instance variable to generate random numbers 
     int port = 3001;
     // connected clients
     private List<ServerThread> clients = new ArrayList<ServerThread>();
@@ -71,25 +71,29 @@ public class Server {
 
     private boolean processCommand(String message, long clientId){
         System.out.println("Checking command: " + message);
+
+        //Yash Mandal - ym299 - 10/15/2023 - Implemented coin toss feature
         if(message.equalsIgnoreCase("flip") || message.equalsIgnoreCase("toss")){
             boolean isHeads = rand.nextBoolean();
             String result = String.format("User[%d] flipped a coin and got %s", clientId, isHeads ? "heads" : "tails");
             broadcast(result, clientId);
             return true;
           }
-        else if(message.matches("roll \\d+d\\d+")) {
-            String[] parts = message.split(" ");
-            int numDice = Integer.parseInt(parts[1].substring(0, parts[1].indexOf("d")));
-            int numSides = Integer.parseInt(parts[1].substring(parts[1].indexOf("d") + 1));
+
+        //Yash Mandal - ym299 - 10/15/2023 - Implemented dice roll feature
+        else if(message.matches("roll \\d+d\\d+")) { //regex handles roll #d# pattern 
+            String[] parts = message.split(" "); //splits roll and #d#
+            int numDice = Integer.parseInt(parts[1].substring(0, parts[1].indexOf("d"))); //gets this "#"d# as int
+            int numSides = Integer.parseInt(parts[1].substring(parts[1].indexOf("d") + 1)); //gets this #d"#"" as int
             
             int total = 0;
-            for(int i = 0; i < numDice; i++) {
+            for(int i = 0; i < numDice; i++) { //Loop for the # of dice, generating a random number from 1 to # sides for each die
                 total += rand.nextInt(numSides) + 1;
             }
             
             String result = String.format("User[%d] rolled %s and got %d", clientId, parts[1], total);
                 
-            broadcast(result, clientId);
+            broadcast(result, clientId); //broadcast formatted string (format "User[clientId] rolled #d# and got 'result'") to all clients
             return true;
         }
         else if (message.equalsIgnoreCase("disconnect")){
