@@ -1,4 +1,4 @@
-package Project.Part5;
+package Project.server;
 
 import java.io.IOException;
 import java.net.ServerSocket;
