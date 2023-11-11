@@ -5,8 +5,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import Project.common.Constants;
 
@@ -112,6 +110,8 @@ public class Room implements AutoCloseable {
      */
     @Deprecated // not used in my project as of this lesson, keeping it here in case things
                 // change
+
+    // Yash Mandal  ym299 11/11/2023
   private String formatText(String text) {
     String formatted = "";
 
@@ -182,7 +182,7 @@ public class Room implements AutoCloseable {
 			
 			  } 
 			  
-			  else if(message.startsWith("/flip")) {
+			  else if(message.startsWith("/flip")) { // Flip ym299 Yash Mandal 11/11/2023
 			
 				int flip = rand.nextInt(2);
 				String result = flip == 0 ? "heads" : "tails";
@@ -272,7 +272,7 @@ public class Room implements AutoCloseable {
             return;
         }
         
-        message = formatText(message);
+        message = formatText(message); // format message command Yash Mandal ym299 11/11/2023
 
         logger.info(String.format("Sending message to %s clients", clients.size()));
         if (sender != null && processCommands(message, sender)) {
@@ -280,11 +280,9 @@ public class Room implements AutoCloseable {
             return;
         }
 
-        if(message.endsWith("/flip29x3728O")){
+        if(message.endsWith("/flip29x3728O")){ // Format result to show lobby name for flip result Yash Mandal ym299 11/11/2023
 			String s = getName();
             long from = sender == null ? Constants.DEFAULT_CLIENT_ID : sender.getClientId();
-			// Remove username 
-			message = message.replaceFirst("^\\w+:", "");
 
 			// Remove command  
 			message = message.replaceFirst("/flip29x3728O$", "");
@@ -299,11 +297,9 @@ public class Room implements AutoCloseable {
 			return;
 		}
 
-		if(message.endsWith("/roll29x3728O")){
+		if(message.endsWith("/roll29x3728O")){ // Format result to show lobby name for flip result Yash Mandal ym299 11/11/2023
 			String s = getName();
             long from = sender == null ? Constants.DEFAULT_CLIENT_ID : sender.getClientId();
-			// Remove username 
-			message = message.replaceFirst("^\\w+:", "");
 
 			// Remove command  
 			message = message.replaceFirst("/roll29x3728O$", "");
