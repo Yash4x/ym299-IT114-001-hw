@@ -5,6 +5,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import Project.common.Constants;
 
@@ -17,6 +19,9 @@ public class Room implements AutoCloseable {
     private List<ServerThread> clients = new ArrayList<ServerThread>();
     private boolean isRunning = false;
     // Commands
+    //private final String BOLD = "*";
+    //private final String ITALICS = "_";
+    //private final String UNDERLINE = "+";
     private final static String COMMAND_TRIGGER = "/";
     private final static String CREATE_ROOM = "createroom";
     private final static String JOIN_ROOM = "joinroom";
@@ -107,6 +112,30 @@ public class Room implements AutoCloseable {
      */
     @Deprecated // not used in my project as of this lesson, keeping it here in case things
                 // change
+  private String formatText(String text) {
+    String formatted = "";
+
+    // Bold
+    formatted = text.replaceAll("\\*(.+?)\\*", "<b>$1</b>");
+
+    // Italics
+    formatted = formatted.replaceAll("-(.+?)-", "<i>$1</i>"); 
+
+    // Underline
+    formatted = formatted.replaceAll("_(.+?)_", "<u>$1</u>");
+
+    // Red
+    formatted = formatted.replaceAll("#r(.+?)r#", "<font color=red>$1</font>");
+
+    // Green
+    formatted = formatted.replaceAll("#g(.+?)g#", "<font color=green>$1</font>");
+
+    // Blue
+    formatted = formatted.replaceAll("#b(.+?)b#", "<font color=blue>$1</font>");
+
+    return formatted;
+  }
+
     private boolean processCommands(String message, ServerThread client) {
         boolean wasCommand = false;
         try {
@@ -238,9 +267,13 @@ public class Room implements AutoCloseable {
      * @param message The message to broadcast inside the room
      */
     protected synchronized void sendMessage(ServerThread sender, String message) {
+
         if (!isRunning) {
             return;
         }
+        
+        message = formatText(message);
+
         logger.info(String.format("Sending message to %s clients", clients.size()));
         if (sender != null && processCommands(message, sender)) {
             // it was a command, don't broadcast
