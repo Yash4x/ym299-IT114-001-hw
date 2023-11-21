@@ -1,8 +1,10 @@
 package Project.server;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.logging.Logger;
 
@@ -20,6 +22,7 @@ public class Room implements AutoCloseable {
     //private final String BOLD = "*";
     //private final String ITALICS = "_";
     //private final String UNDERLINE = "+";
+    private Map<Long, List<Long>> mutedUsers = new HashMap<>(); ///////////////////////////////
     private final static String COMMAND_TRIGGER = "/";
     private final static String CREATE_ROOM = "createroom";
     private final static String JOIN_ROOM = "joinroom";
@@ -27,6 +30,19 @@ public class Room implements AutoCloseable {
     private final static String LOGOUT = "logout";
     private final static String LOGOFF = "logoff";
     private static Logger logger = Logger.getLogger(Room.class.getName());
+
+        // New helper method
+    private long getClientIdFromName(String name) {
+        for(ServerThread client : clients) {
+            if(client.getClientName().equals(name)) {
+                return client.getClientId();
+            } 
+        }
+        return -1; 
+    }///////////////////////
+
+
+
 
     public Room(String name) {
         this.name = name;
@@ -139,6 +155,23 @@ public class Room implements AutoCloseable {
     private boolean processCommands(String message, ServerThread client) {
         boolean wasCommand = false;
         try {
+
+            if(message.startsWith("/mute")) {///////////////
+                String target = message.split(" ")[1];
+                long toMute = getClientIdFromName(target); 
+                mutedUsers.computeIfAbsent(client.getClientId(), k -> new ArrayList<>()).add(toMute);
+                return true;
+              }
+              
+              if(message.startsWith("/unmute")) {
+                String target = message.split(" ")[1];  
+                long toUnmute = getClientIdFromName(target);
+                List<Long> muted = mutedUsers.get(client.getClientId());
+                if(muted != null) {
+                  muted.remove(toUnmute);
+                }
+                return true;
+              }///////////////////
             // ROLL AND FLIP METHODS- Yash Mandal - ym299 - 11/9/2023
 			if(message.startsWith("/roll")) {
 
@@ -258,6 +291,15 @@ public class Room implements AutoCloseable {
     }
     // end command helper methods
 
+    private ServerThread getClientByName(String recipient) { // Gets client name Yash Mandal ym299 11/15/2023
+        for(ServerThread client : clients) {
+          if(client.getClientName().equals(recipient)) {
+            return client;
+          }
+        }
+        return null;
+      }
+    
     /***
      * Takes a sender and a message and broadcasts the message to all clients in
      * this room. Client is mostly passed for command purposes but we can also use
@@ -271,8 +313,42 @@ public class Room implements AutoCloseable {
         if (!isRunning) {
             return;
         }
+        boolean isMutedForPrivateMsg = false;
         
         message = formatText(message); // format message command Yash Mandal ym299 11/11/2023
+
+        if(message.startsWith("@")) { // @username sends message privately Yash Mandal ym299 11/15/2023
+
+            // Extract recipient name
+            String[] split = message.split(" ", 2);
+            String recipient = split[0].substring(1);
+            
+            // Get recipient client 
+            ServerThread recipientClient = getClientByName(recipient); 
+            Iterator<ServerThread> iter = clients.iterator();
+            // Send private message
+            
+                ServerThread client = iter.next();
+                if(mutedUsers.containsKey(client.getClientId()) && mutedUsers.get(client.getClientId()).contains(sender.getClientId())) {//////////////////
+                    return; // skip sending message to this client
+                }
+            ///////////
+                else if(clients.contains(recipientClient)) {
+                
+                    recipientClient.sendMessage(sender.getClientId(), message);
+                    sender.sendMessage(sender.getClientId(),message);
+          
+                }
+
+                else {
+                    sender.sendMessage(sender.getClientId(),"This person is not in this room.");
+                }
+            
+          
+            // Don't broadcast 
+            return;
+          
+        }
 
         logger.info(String.format("Sending message to %s clients", clients.size()));
         if (sender != null && processCommands(message, sender)) {
@@ -317,6 +393,10 @@ public class Room implements AutoCloseable {
         Iterator<ServerThread> iter = clients.iterator();
         while (iter.hasNext()) {
             ServerThread client = iter.next();
+            if(mutedUsers.containsKey(client.getClientId()) && mutedUsers.get(client.getClientId()).contains(sender.getClientId())) {//////////////////
+                continue; // skip sending message to this client
+            }
+            ///////////
             boolean messageSent = client.sendMessage(from, message);
             if (!messageSent) {
                 handleDisconnect(iter, client);
