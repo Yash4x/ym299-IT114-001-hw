@@ -22,7 +22,8 @@ public class Room implements AutoCloseable {
     //private final String BOLD = "*";
     //private final String ITALICS = "_";
     //private final String UNDERLINE = "+";
-    private Map<Long, List<Long>> mutedUsers = new HashMap<>(); ///////////////////////////////
+    private Map<Long, List<Long>> mutedUsers = new HashMap<>(); // Map to track which users have muted which other users, Key = user id of muter, Value = list of muted 
+    //user ids ym299 Yash Mandal 11/11/23
     private final static String COMMAND_TRIGGER = "/";
     private final static String CREATE_ROOM = "createroom";
     private final static String JOIN_ROOM = "joinroom";
@@ -156,73 +157,96 @@ public class Room implements AutoCloseable {
         boolean wasCommand = false;
         try {
 
-            if(message.startsWith("/mute")) {///////////////
-                String target = message.split(" ")[1];
-                long toMute = getClientIdFromName(target); 
-                mutedUsers.computeIfAbsent(client.getClientId(), k -> new ArrayList<>()).add(toMute);
+            if(message.startsWith("/mute")) {// Handle /mute command
+                String target = message.split(" ")[1]; // Get target user name
+                long toMute = getClientIdFromName(target);  // Get target user id
+                Iterator<ServerThread> iter = clients.iterator();
+                ServerThread recipientClient = getClientByName(target);
+                while(iter.hasNext()){  // Check each client
+                    if(clients.contains(recipientClient)) {// Check if target user is in room
+                        mutedUsers.computeIfAbsent(client.getClientId(), k -> new ArrayList<>()).add(toMute); // If yes, add target user id to muter's muted list
+                        client.sendMessage(client.getClientId(),"you muted " + target); // Send confirmation message
+                        break;
+                    }
+
+                    else { // // If no, send error that target not in room
+                        client.sendMessage(client.getClientId(), target + " is not in this room.");
+                        break;
+                    }
+            
+                }
                 return true;
               }
               
-              if(message.startsWith("/unmute")) {
-                String target = message.split(" ")[1];  
-                long toUnmute = getClientIdFromName(target);
-                List<Long> muted = mutedUsers.get(client.getClientId());
-                if(muted != null) {
-                  muted.remove(toUnmute);
+              if(message.startsWith("/unmute")) { // Handle /unmute command
+                String target = message.split(" ")[1];  // Get target user name
+                long toUnmute = getClientIdFromName(target); // Get target user id
+                List<Long> muted = mutedUsers.get(client.getClientId()); 
+                if(muted != null) { //if muted list is not empty: 
+                  muted.remove(toUnmute); // Remove target user id from muter's muted list if exists
+                  Iterator<ServerThread> iter = clients.iterator();
+                  ServerThread recipientClient = getClientByName(target);
+                  while(iter.hasNext()){  // Check each client
+                    if(clients.contains(recipientClient)) {// Check if target user is in room
+                        client.sendMessage(client.getClientId(),"you unmuted " + target); // If yes, send confirmation of unmute
+                        break;
+                    }
+
+                    else { // If no, send error that target not in room
+                        client.sendMessage(client.getClientId(), target + " is not in this room.");
+                        break;
+                    }
+            
+                  }
                 }
                 return true;
-              }///////////////////
+              }
             // ROLL AND FLIP METHODS- Yash Mandal - ym299 - 11/9/2023
 			if(message.startsWith("/roll")) {
-
-				String[] parts = message.split(" ");
+				String[] parts = message.split(" "); // Split message Yash Mandal - ym299 - 11/9/2023
 			
-				if(parts.length == 2 && parts[1].contains("d")) {
-			
-				  // format: /roll #d#
+				if(parts.length == 2 && parts[1].contains("d")) { // Check format #d# Yash Mandal - ym299 - 11/9/2023
+				  // Split on letter d and parse dice as int to the left and right of the letter d Yash Mandal - ym299 - 11/9/2023 
 				  String[] dice = parts[1].split("d");
 				  int numDice = Integer.parseInt(dice[0]);
 				  int numSides = Integer.parseInt(dice[1]);
-			
+                    
+                  // Generate rolls Yash Mandal - ym299 - 11/9/2023
 				  int total = 0;
 				  for(int i=0; i<numDice; i++) {
 					total += rand.nextInt(numSides) + 1;
 				  }
 			
-				  sendMessage(client, client.getClientName() + " rolled " + total + " using " + parts[1] + "/roll29x3728O");
+				  sendMessage(client, client.getClientName() + " rolled " + total + " using " + parts[1] + "/roll29x3728O"); // Send message Yash Mandal - ym299 - 11/9/2023
 				  return true;
 			
 				} 
-				
 				else if(parts.length == 2) {
 			
-				  // format: /roll #   (start at 1 for rolls)
-
+				  // format: /roll #   (start at 1 for rolls) Yash Mandal - ym299 - 11/9/2023
                   int max = Integer.parseInt(parts[1]);
                   int roll = (int)(Math.random() * max) + 1;
 			
-				  sendMessage(client, client.getClientName() + " rolled " + roll + " using " + message + "/roll29x3728O");
+				  sendMessage(client, client.getClientName() + " rolled " + roll + " using " + message + "/roll29x3728O"); // Send message Yash Mandal - ym299 - 11/9/2023
 				  return true;
 			
 				} 
-				
 				else {
-				  // invalid format
+				  // invalid format Yash Mandal - ym299 - 11/9/2023
 				  sendMessage(client, "Invalid roll format. Use '/roll x-y' or '/roll #d#'"); 
 				  return true;
 				}
 			
-			
 			  } 
 			  
 			  else if(message.startsWith("/flip")) { // Flip ym299 Yash Mandal 11/11/2023
+                
+				int flip = rand.nextInt(2); // Generate random 0 or 1 ym299 Yash Mandal 11/11/2023 
+				String result = flip == 0 ? "heads" : "tails"; // Convert to string result ym299 Yash Mandal 11/11/2023
 			
-				int flip = rand.nextInt(2);
-				String result = flip == 0 ? "heads" : "tails";
+				sendMessage(client, client.getClientName() + " flipped " + result + "/flip29x3728O"); // Send initial result message ym299 Yash Mandal 11/11/2023 
 			
-				sendMessage(client, client.getClientName() + " flipped " + result + "/flip29x3728O");
-			
-				return true;
+				return true; // Return true because command was processed ym299 Yash Mandal 11/11/2023
 			
 			  }
             if (message.startsWith(COMMAND_TRIGGER)) {
@@ -319,33 +343,35 @@ public class Room implements AutoCloseable {
 
         if(message.startsWith("@")) { // @username sends message privately Yash Mandal ym299 11/15/2023
 
-            // Extract recipient name
+            // Get recipient name after '@' symbol
             String[] split = message.split(" ", 2);
             String recipient = split[0].substring(1);
             
-            // Get recipient client 
-            ServerThread recipientClient = getClientByName(recipient); 
+            // Get recipient client object
+            ServerThread recipientClient = getClientByName(recipient); // Iterate through connected clients 
             Iterator<ServerThread> iter = clients.iterator();
-            // Send private message
-            
+           
+            while(iter.hasNext()){  // Check each client
                 ServerThread client = iter.next();
-                if(mutedUsers.containsKey(client.getClientId()) && mutedUsers.get(client.getClientId()).contains(sender.getClientId())) {//////////////////
-                    return; // skip sending message to this client
+                if(mutedUsers.containsKey(client.getClientId()) && mutedUsers.get(client.getClientId()).contains(sender.getClientId())) {///// Check if sender is muted
+                    sender.sendMessage(sender.getClientId(),"This person has you muted.");
+                    break; // skip sending message to this client
                 }
-            ///////////
-                else if(clients.contains(recipientClient)) {
+
+                else if(clients.contains(recipientClient)) {// if not muted && recepient is in the same room, send private message to sender and receiver
                 
                     recipientClient.sendMessage(sender.getClientId(), message);
                     sender.sendMessage(sender.getClientId(),message);
-          
+                    break;
                 }
 
-                else {
+                else { // else client is not in room
                     sender.sendMessage(sender.getClientId(),"This person is not in this room.");
+                    break;
                 }
             
-          
-            // Don't broadcast 
+            }
+            // Don't broadcast message
             return;
           
         }
@@ -357,16 +383,16 @@ public class Room implements AutoCloseable {
         }
 
         if(message.endsWith("/flip29x3728O")){ // Format result to show lobby name for flip result Yash Mandal ym299 11/11/2023
-			String s = getName();
-            long from = sender == null ? Constants.DEFAULT_CLIENT_ID : sender.getClientId();
+			String s = getName(); // Get room name Yash Mandal ym299 11/11/2023
+            long from = sender == null ? Constants.DEFAULT_CLIENT_ID : sender.getClientId(); // Get client ID Yash Mandal ym299 11/11/2023 
 
-			// Remove command  
+			// Remove appended string
 			message = message.replaceFirst("/flip29x3728O$", "");
-			Iterator<ServerThread> iter = clients.iterator();
-			while (iter.hasNext()) {
-				ServerThread client = iter.next();
-				boolean messageSent = client.sendMessage(from, message + " in room " + s);
-				if (!messageSent) {
+			Iterator<ServerThread> iter = clients.iterator(); // Iterate over clients Yash Mandal ym299 11/11/2023
+			while (iter.hasNext()) { // Send message to each client Yash Mandal ym299 11/11/2023
+				ServerThread client = iter.next(); // Get next client Yash Mandal ym299 11/11/2023
+				boolean messageSent = client.sendMessage(from, "<b>" + message + " in room " + s + "</b>"); // Send formatted message with room name Yash Mandal ym299 11/11/2023  
+				if (!messageSent) { // Check for disconnect Yash Mandal ym299 11/11/2023
 					handleDisconnect(iter, client);
 				}
 			}
@@ -374,16 +400,16 @@ public class Room implements AutoCloseable {
 		}
 
 		if(message.endsWith("/roll29x3728O")){ // Format result to show lobby name for flip result Yash Mandal ym299 11/11/2023
-			String s = getName();
-            long from = sender == null ? Constants.DEFAULT_CLIENT_ID : sender.getClientId();
+			String s = getName(); // Get room name Yash Mandal ym299 11/11/2023
+            long from = sender == null ? Constants.DEFAULT_CLIENT_ID : sender.getClientId(); // Get client ID Yash Mandal ym299 11/11/2023
 
-			// Remove command  
+			// Remove appended string  
 			message = message.replaceFirst("/roll29x3728O$", "");
-			Iterator<ServerThread> iter = clients.iterator();
-			while (iter.hasNext()) {
-				ServerThread client = iter.next();
-				boolean messageSent = client.sendMessage(from, message + " in room " + s);
-				if (!messageSent) {
+			Iterator<ServerThread> iter = clients.iterator(); // Iterate over clients Yash Mandal ym299 11/11/2023
+			while (iter.hasNext()) { // Send message to each client Yash Mandal ym299 11/11/2023
+				ServerThread client = iter.next(); // Get next client Yash Mandal ym299 11/11/2023
+				boolean messageSent = client.sendMessage(from, "<b>" + message + " in room " + s + "</b>"); // Send formatted message with room name Yash Mandal ym299 11/11/2023
+				if (!messageSent) { // Check for disconnect Yash Mandal ym299 11/11/2023
 					handleDisconnect(iter, client);
 				}
 			}
