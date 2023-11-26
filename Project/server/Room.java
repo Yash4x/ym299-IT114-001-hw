@@ -189,7 +189,7 @@ public class Room implements AutoCloseable {
 					total += rand.nextInt(numSides) + 1;
 				  }
 			
-				  sendMessage(client, client.getClientName() + " rolled " + total + "/roll29x3728O");
+				  sendMessage(client, client.getClientName() + " rolled " + total + " using " + parts[1] + "/roll29x3728O");
 				  return true;
 			
 				} 
@@ -201,7 +201,7 @@ public class Room implements AutoCloseable {
                   int max = Integer.parseInt(parts[1]);
                   int roll = (int)(Math.random() * max) + 1;
 			
-				  sendMessage(client, client.getClientName() + " rolled " + roll + "/roll29x3728O");
+				  sendMessage(client, client.getClientName() + " rolled " + roll + " using " + message + "/roll29x3728O");
 				  return true;
 			
 				} 
@@ -313,7 +313,7 @@ public class Room implements AutoCloseable {
         if (!isRunning) {
             return;
         }
-        boolean isMutedForPrivateMsg = false;
+
         
         message = formatText(message); // format message command Yash Mandal ym299 11/11/2023
 
