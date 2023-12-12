@@ -145,40 +145,42 @@ public class ChatPanel extends JPanel {
             }
         });
 
-        exportButton = new JButton("Export Chat");////////////////
-        exportButton.addActionListener(e -> {
+        exportButton = new JButton("Export Chat");// Yash Mandal ym299 11/28/2023
+        exportButton.addActionListener(e -> { // Export chat when clicked
           exportChatTranscript();
         }); 
         
-        input.add(exportButton);
+        input.add(exportButton); // Add export button to UI
     }
 
-      private void exportChatTranscript() {
+      private void exportChatTranscript() { // Export transcript method
         try {
-            File file = new File("chat_transcript.html");
-            PrintWriter writer = new PrintWriter(file);
+            File file = new File("chat_transcript.html"); // Create file for export 
+            PrintWriter writer = new PrintWriter(file); // Open print writer 
             
+            // Write HTML header 
             writer.println("<html>");
             writer.println("<body>");
             writer.println("<ul>");
             
-            for(Component c : chatArea.getComponents()) {
-              if(c instanceof JEditorPane) {
-                JEditorPane pane = (JEditorPane)c;
-                writer.println("  <li>" + pane.getText() + "</li>");
+            for(Component c : chatArea.getComponents()) { // Loop through all chatarea text components
+              if(c instanceof JEditorPane) { // Check if component is chat message pane
+                JEditorPane pane = (JEditorPane)c; // Cast to JEditorPane
+                writer.println("  <li>" + pane.getText() + "</li>"); // Write chat message to file 
               }
             }
             
+            // Finish HTML 
             writer.println("</ul>");
             writer.println("</body>"); 
             writer.println("</html>");
             
-            writer.close();
-            System.out.println("Chat transcript exported to: " + file.getAbsolutePath());
+            writer.close(); // Close writer 
+            System.out.println("Chat transcript exported to: " + file.getAbsolutePath()); // Output file location
             
             } 
             
-            catch (FileNotFoundException ex) {
+            catch (FileNotFoundException ex) { // Handle error  
                 ex.printStackTrace();
             }///////////////////
   }
