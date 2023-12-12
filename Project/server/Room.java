@@ -312,7 +312,7 @@ public class Room implements AutoCloseable {
                     if(clients.contains(recipientClient)) {// Check if target user is in room
                         mutedUsers.computeIfAbsent(client.getClientId(), k -> new ArrayList<>()).add(toMute); // If yes, add target user id to muter's muted list
                         // Check if muted message already sent
-                        if (!mutedMessage.contains(recipientClient.getClientId()) && mutedUsersByUsername.containsKey(client.getClientName())){ 
+                        if (!mutedMessage.contains(recipientClient.getClientId())){ 
                             unmutedMessage.remove(recipientClient.getClientId()); // Remove from unmuted list if needed
                             mutedMessage.add(recipientClient.getClientId()); // Add user id to muted message list
                             client.sendMessage(client.getClientId(),"You muted " + target); // Send confirmation to muting user   
