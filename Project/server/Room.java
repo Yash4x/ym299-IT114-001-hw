@@ -28,7 +28,7 @@ public class Room implements AutoCloseable {
     //private final String BOLD = "*";
     //private final String ITALICS = "_";
     //private final String UNDERLINE = "+";                      // Yash Mandal ym299 12/9/2023
-    private Map<Long, List<Long>> mutedUsers = new HashMap<>(); // Map to track which users have muted which other users, Key = user id of muter, Value = list of muted user ids ym299 Yash Mandal 11/11/23
+    private Map<Long, List<Long>> mutedUsers = new HashMap<>(); // Map to track which users have muted which other users, Key = user id of muter, Value = list of muted user ids
     private List <Long> mutedMessage = new ArrayList<>(); // created string lists to track which users are muted to avoid spam
     private List <Long> unmutedMessage = new ArrayList<>();// created string lists to track which users are unmuted to avoid spam
     Map<String, List<String>> mutedUsersByUsername = new HashMap<>();// created Map to basically convert the mutedUsers map with ids to usernames
@@ -50,34 +50,32 @@ public class Room implements AutoCloseable {
         return -1; 
     }/////////////////////// 
 
-    private void convertMutedUsernamesToIds() {
+    private void convertMutedUsernamesToIds() { // Convert mutedUsersByUsername map from usernames to ids // Yash Mandal ym299 12/9/2023
 
-        // Clear existing muted users map
+        for(Map.Entry<String, List<String>> entry : mutedUsersByUsername.entrySet()) { // Iterate through each entry in mutedUsersByUsername map
       
-        for(Map.Entry<String, List<String>> entry : mutedUsersByUsername.entrySet()) {
-      
-          String muterUsername = entry.getKey();
+          String muterUsername = entry.getKey(); // Get muter username 
           
-          List<Long> mutedIds = new ArrayList<>();
+          List<Long> mutedIds = new ArrayList<>(); // List to store muted ids
       
-          for(String mutedUsername : entry.getValue()) {
+          for(String mutedUsername : entry.getValue()) { // Iterate through muted usernames list for this muting user 
       
-            long mutedId = getClientIdFromName(mutedUsername);
-            mutedIds.add(mutedId);
+            long mutedId = getClientIdFromName(mutedUsername);// Get muted user id from username
+            mutedIds.add(mutedId);   // Add muted id to list 
       
           }
       
-          long muterId = getClientIdFromName(muterUsername);
+          long muterId = getClientIdFromName(muterUsername); // Get muter user id from username
       
-          // Add converted list to mutedUsers
+          // Add list of muted ids under muter id to main mutedUsers map
           mutedUsers.put(muterId, mutedIds);
       
         }
       
     }
-    private void readSavedMutedUsersFile(ServerThread client) {
+    private void readSavedMutedUsersFile(ServerThread client) { // Read saved muted users from CSV // Yash Mandal ym299 12/9/2023
 
-        String filename = client.getClientName() + "_muted_users.csv";
+        String filename = client.getClientName() + "_muted_users.csv"; // Load saved CSV file for this user
 
         try {
 
@@ -122,27 +120,27 @@ public class Room implements AutoCloseable {
 
     }
 
-    private void saveMutedUsers(ServerThread client) {
+    private void saveMutedUsers(ServerThread client) { // Save muted users to CSV file // Yash Mandal ym299 12/9/2023
 
         try {
                 
-            String mutingUser = client.getClientName();
+            String mutingUser = client.getClientName(); // Get muting user name
                 
-            List<String> mutedUsers = mutedUsersByUsername.getOrDefault(mutingUser, new ArrayList<>());
+            List<String> mutedUsers = mutedUsersByUsername.getOrDefault(mutingUser, new ArrayList<>()); // Get list of muted usernames for this user
 
             if(mutedUsers == null || mutedUsers.isEmpty()) {
-                // No muted users for this user 
+                // No muted users, skip saving
                 return;
             }
                 
-            String fileName = mutingUser + "_muted_users.csv";
+            String fileName = mutingUser + "_muted_users.csv"; // Construct file name 
                 
-            File file = new File(fileName);
+            File file = new File(fileName); // Open file for writing
                 
             FileWriter fileWriter = new FileWriter(file);
                 
-            String record = mutingUser + "," + String.join("|", mutedUsers);            
-            fileWriter.write(record + "\n"); 
+            String record = mutingUser + "," + String.join("|", mutedUsers); // Create CSV record             
+            fileWriter.write(record + "\n"); // Write to the file  
             fileWriter.close();
                 
         } catch (IOException e) {
@@ -151,20 +149,20 @@ public class Room implements AutoCloseable {
     
     }
 
-    private void convertMutedUsersToUsernames() {
-
-        for (Map.Entry<Long, List<Long>> entry : mutedUsers.entrySet()) {
+    private void convertMutedUsersToUsernames() { // Convert ids back to usernames // Yash Mandal ym299 12/9/2023
+ 
+        for (Map.Entry<Long, List<Long>> entry : mutedUsers.entrySet()) { // Loop through main mutedUsers map
     
-          String muterUsername = getUsernameById(entry.getKey());  
+          String muterUsername = getUsernameById(entry.getKey());   // Get muting user id and username 
     
-          List<String> mutedUsernames = new ArrayList<>();
+          List<String> mutedUsernames = new ArrayList<>(); // List to store muted usernames  
         
-          for (Long mutedId : entry.getValue()) {
-            String mutedUsername = getUsernameById(mutedId);
-            mutedUsernames.add(mutedUsername);  
+          for (Long mutedId : entry.getValue()) { // Loop through muted ids list
+            String mutedUsername = getUsernameById(mutedId);  // Convert id to username
+            mutedUsernames.add(mutedUsername);   // Add to list 
           }
     
-          mutedUsersByUsername.put(muterUsername, mutedUsernames);
+          mutedUsersByUsername.put(muterUsername, mutedUsernames); // Add entry to mutedUsersByUsername map
     
         }
     
@@ -211,10 +209,10 @@ public class Room implements AutoCloseable {
             syncCurrentUsers(client);
             sendConnectionStatus(client, true);
 
-            // Check and save muted users CSV
+            // create a new file for client to check if they already have one with their name. // Yash Mandal ym299 12/9/2023
             String fileName = client.getClientName() + "_muted_users.csv";
             File file = new File(fileName);
-            if(file.exists()) {
+            if(file.exists()) { // if the file exists, read the file, and convert the muted usernames to Ids.
                 readSavedMutedUsersFile(client);
                 convertMutedUsernamesToIds();
             }
@@ -313,13 +311,14 @@ public class Room implements AutoCloseable {
                 while(iter.hasNext()){  // Check each client
                     if(clients.contains(recipientClient)) {// Check if target user is in room
                         mutedUsers.computeIfAbsent(client.getClientId(), k -> new ArrayList<>()).add(toMute); // If yes, add target user id to muter's muted list
-                        if (!mutedMessage.contains(recipientClient.getClientId()) && mutedUsersByUsername.containsKey(client.getClientName())){
-                            unmutedMessage.remove(recipientClient.getClientId());
-                            mutedMessage.add(recipientClient.getClientId());
-                            client.sendMessage(client.getClientId(),"You muted " + target); // Send confirmation message    
-                            recipientClient.sendMessage(recipientClient.getClientId(), client.getClientName() + " muted you.");
-                            convertMutedUsersToUsernames();
-                            saveMutedUsers(client);
+                        // Check if muted message already sent
+                        if (!mutedMessage.contains(recipientClient.getClientId()) && mutedUsersByUsername.containsKey(client.getClientName())){ 
+                            unmutedMessage.remove(recipientClient.getClientId()); // Remove from unmuted list if needed
+                            mutedMessage.add(recipientClient.getClientId()); // Add user id to muted message list
+                            client.sendMessage(client.getClientId(),"You muted " + target); // Send confirmation to muting user   
+                            recipientClient.sendMessage(recipientClient.getClientId(), client.getClientName() + " muted you."); // Tell target user they were muted
+                            convertMutedUsersToUsernames(); // Convert main muted users map back to usernames
+                            saveMutedUsers(client); // Save muted users on client file
                             break;
                         }
 
@@ -346,18 +345,19 @@ public class Room implements AutoCloseable {
                   ServerThread recipientClient = getClientByName(target);
                   while(iter.hasNext()){  // Check each client
                     if(clients.contains(recipientClient)) {// Check if target user is in room
-                        if (!unmutedMessage.contains(recipientClient.getClientId()) && mutedString != null){
-                            mutedMessage.remove(recipientClient.getClientId());
-                            unmutedMessage.add(recipientClient.getClientId());
-                            client.sendMessage(client.getClientId(),"You unmuted " + target); // Send confirmation message
-                            recipientClient.sendMessage(recipientClient.getClientId(), client.getClientName() + " unmuted you.");
+                        if (!unmutedMessage.contains(recipientClient.getClientId()) && mutedString != null){ // Check if unmute message already sent
+                            mutedMessage.remove(recipientClient.getClientId()); // Remove user id from muted messages since unmute message was not yet sent
+                            unmutedMessage.add(recipientClient.getClientId()); // add user id to unmuted messages since unmute message was not yet sent
+                            client.sendMessage(client.getClientId(),"You unmuted " + target);  // Tell muting user unmute succeeded
+                            recipientClient.sendMessage(recipientClient.getClientId(), client.getClientName() + " unmuted you.");  // Tell target they were unmuted
+                            //check if the client and its muted user is in mutedUsersByUsername List
                             if (mutedUsersByUsername.containsKey(client.getClientName()) && mutedUsersByUsername.get(client.getClientName()).equals(target)) {
-                                mutedUsersByUsername.remove(target);
-                                saveMutedUsers(client);
+                                mutedUsersByUsername.remove(target); // If yes, remove them.
+                                saveMutedUsers(client); //save the client file.
                             }
                             else{
-                                convertMutedUsersToUsernames();
-                                saveMutedUsers(client);
+                                convertMutedUsersToUsernames(); // if for some reason the if statement was false, convert the muted users list to usernames and save it.
+                                saveMutedUsers(client);// then save the client file.
                             }
                             break;
                         }
