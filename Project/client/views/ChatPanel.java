@@ -9,7 +9,10 @@ import java.awt.event.ContainerEvent;
 import java.awt.event.ContainerListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -32,6 +35,7 @@ public class ChatPanel extends JPanel {
     private static Logger logger = Logger.getLogger(ChatPanel.class.getName());
     private JPanel chatArea = null;
     private UserListPanel userListPanel;
+    private JButton exportButton; // added export button ym299 Yash Mandal 11/28/2023
 
     public ChatPanel(ICardControls controls) {
         super(new BorderLayout(10, 10));
@@ -140,7 +144,44 @@ public class ChatPanel extends JPanel {
                 // System.out.println("Moved to " + e.getComponent().getLocation());
             }
         });
+
+        exportButton = new JButton("Export Chat");////////////////
+        exportButton.addActionListener(e -> {
+          exportChatTranscript();
+        }); 
+        
+        input.add(exportButton);
     }
+
+      private void exportChatTranscript() {
+        try {
+            File file = new File("chat_transcript.html");
+            PrintWriter writer = new PrintWriter(file);
+            
+            writer.println("<html>");
+            writer.println("<body>");
+            writer.println("<ul>");
+            
+            for(Component c : chatArea.getComponents()) {
+              if(c instanceof JEditorPane) {
+                JEditorPane pane = (JEditorPane)c;
+                writer.println("  <li>" + pane.getText() + "</li>");
+              }
+            }
+            
+            writer.println("</ul>");
+            writer.println("</body>"); 
+            writer.println("</html>");
+            
+            writer.close();
+            System.out.println("Chat transcript exported to: " + file.getAbsolutePath());
+            
+            } 
+            
+            catch (FileNotFoundException ex) {
+                ex.printStackTrace();
+            }///////////////////
+  }
 
     public void addUserListItem(long clientId, String clientName) {
         userListPanel.addUserListItem(clientId, clientName);
