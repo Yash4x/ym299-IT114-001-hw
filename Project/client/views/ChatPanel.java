@@ -9,7 +9,10 @@ import java.awt.event.ContainerEvent;
 import java.awt.event.ContainerListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -32,6 +35,7 @@ public class ChatPanel extends JPanel {
     private static Logger logger = Logger.getLogger(ChatPanel.class.getName());
     private JPanel chatArea = null;
     private UserListPanel userListPanel;
+    private JButton exportButton; // added export button ym299 Yash Mandal 11/28/2023
 
     public ChatPanel(ICardControls controls) {
         super(new BorderLayout(10, 10));
@@ -140,7 +144,46 @@ public class ChatPanel extends JPanel {
                 // System.out.println("Moved to " + e.getComponent().getLocation());
             }
         });
+
+        exportButton = new JButton("Export Chat");// Yash Mandal ym299 11/28/2023
+        exportButton.addActionListener(e -> { // Export chat when clicked
+          exportChatTranscript();
+        }); 
+        
+        input.add(exportButton); // Add export button to UI
     }
+
+      private void exportChatTranscript() { // Export transcript method
+        try {
+            File file = new File("chat_transcript.html"); // Create file for export 
+            PrintWriter writer = new PrintWriter(file); // Open print writer 
+            
+            // Write HTML header 
+            writer.println("<html>");
+            writer.println("<body>");
+            writer.println("<ul>");
+            
+            for(Component c : chatArea.getComponents()) { // Loop through all chatarea text components
+              if(c instanceof JEditorPane) { // Check if component is chat message pane
+                JEditorPane pane = (JEditorPane)c; // Cast to JEditorPane
+                writer.println("  <li>" + pane.getText() + "</li>"); // Write chat message to file 
+              }
+            }
+            
+            // Finish HTML 
+            writer.println("</ul>");
+            writer.println("</body>"); 
+            writer.println("</html>");
+            
+            writer.close(); // Close writer 
+            System.out.println("Chat transcript exported to: " + file.getAbsolutePath()); // Output file location
+            
+            } 
+            
+            catch (FileNotFoundException ex) { // Handle error  
+                ex.printStackTrace();
+            }///////////////////
+  }
 
     public void addUserListItem(long clientId, String clientName) {
         userListPanel.addUserListItem(clientId, clientName);
